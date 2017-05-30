@@ -50,14 +50,13 @@ Websnap (0.1.0) introduces the directive
 .. code:: rst
    
    .. websnap-url:: <website-url>
-                    <urlname>                  
+                    <url text>                  
 
 What's planned?
 ---------------
 The following are planned features and functionality:
 
 - [A] Add a lock on the cachefile using https://github.com/WoLpH/portalocker 
-- [B] Refactor and clean up the code
 - [B] Add directive for downloading a URL and assigning it 
   symbolic name that can be used to refer to it.
 - [B] Add option to current directive to give it a reusable linkname
@@ -65,7 +64,8 @@ The following are planned features and functionality:
   - downloaded time and date
   - the generated reference to use for the URL
   - the original title from the html
+
 - [B] Consider whether it may be good to store URL and other information
-      as a comment at the top of the downloaded HTML file.
+  as a comment at the top of the downloaded HTML file.
 - [C] Add directive for downloading binary files
 - [C] Add command for updating all outdated cached websites

@@ -26,10 +26,37 @@ has an unstable API.
 I take no liability for messing up your Sphinx documentation, consuming your 
 internet or breaking your computer.
 
+Installation
+------------
+
+::
+   pip install sphinxcontrib-websnap
+
+Then include websnap in your extensions:
+
+.. code:: python
+
+   extensions = [ 
+      # ...
+      'sphinxcontrib.websnap'
+   ]
+
+
+
+Usage
+-----
+Websnap (0.1.0) introduces the directive
+
+.. code:: rst
+   
+   .. websnap-url:: <website-url>
+                    <urlname>                  
+
 What's planned?
 ---------------
 The following are planned features and functionality:
 
+- [A] Add a lock on the cachefile using https://github.com/WoLpH/portalocker 
 - [B] Refactor and clean up the code
 - [B] Add directive for downloading a URL and assigning it 
   symbolic name that can be used to refer to it.

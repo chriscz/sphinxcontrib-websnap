@@ -1,42 +1,37 @@
+import os
+import sys
+import re
+import io
+import random
+import string
+import json
+
 from docutils import nodes
 from docutils.parsers.rst import Directive
-import os
-
 from sphinx.locale import _
 
-import webpage2html
+from bs4 import BeautifulSoup
+
+from . import webpage2html
+
+__version__ = '0.1.0'
 
 NAMESPACE = 'websnap'
 
-# http://www.sphinx-doc.org/en/stable/extdev/tutorial.html
-
-class websnap_inline_node(nodes.General, nodes.Element):
+class websnap_url_node(nodes.General, nodes.Element):
     pass
 
-class WebsnapInlineDirective(Directive):
-    FORMAT = 'ws-url-%d'
-    # see http://www.sphinx-doc.org/en/stable/extdev/markupapi.html#docutils.parsers.rst.Directive
+class WebsnapUrlDirective(Directive):
+    """
+    Sphinx directive
+    """
+    FORMAT = 'websnap-url-%d'
     required_arguments = 2
     final_argument_whitespace = True
-    # optional_arguments
-
-    # option_spec
-  #  @staticmethod
-  #  def check_linkname(name):
-  #      if name is None:
-  #          raise ValueError(":linkname: option required!")
-
-  #  option_spec = {
-  #      'linkname': check_linkname
-  #  }
-
     has_content = False
 
     def run(self):
         env = self.state.document.settings.env
-
-        target_id = self.FORMAT % env.new_serialno(NAMESPACE)
-        target_node = nodes.target('', '', ids=[target_id])
 
         if not hasattr(env, 'websnap_urls'):
             env.websnap_urls = {}
@@ -44,39 +39,24 @@ class WebsnapInlineDirective(Directive):
         url = self.arguments[0]
         linkname = self.arguments[1]
 
+        target_id = self.FORMAT % env.new_serialno(NAMESPACE)
+        target_node = nodes.target('', '', ids=[target_id])
+
         if url not in env.websnap_urls:
             env.websnap_urls[url] = {
-                'docname': env.docname,
-                'lineno': self.lineno,
                 'url': url,
-                'linkname': linkname,
-                'target_node': target_node
+                'title': linkname,
             }
-        return [target_node, websnap_inline_node(url)]
 
-
-
-def visit_inline(self, node):
-    self.visit_general(node)
-
-def depart_inline(self, node):
-    self.visit_general(node)
-
-
-
-import json
-import random
-import io
-import sys
-from bs4 import BeautifulSoup
-import re
-import string
+        node = websnap_url_node()
+        node['websnap_url'] = url
+        node['websnap_title'] = linkname
+        return [target_node, node]
 
 
 class WebpageCache(object):
     def __init__(self, directory, cache_file='.cache'):
-
-        self.directory = directory
+        self.directory = os.path.abspath(directory)
         self.cachepath = os.path.join(directory, cache_file)
         self.urlcache = {}
 
@@ -90,9 +70,23 @@ class WebpageCache(object):
         with open(self.cachepath, 'w') as f:
             json.dump(self.urlcache, f)
 
+    def sourcerel(self, url, env, make_absolute=True):
+        """Return path to the downloaded website, relative to the source directory"""
+        page_path = self.filepath(url)
+        assert page_path.startswith(env.srcdir)
+
+        page_url = page_path[len(env.srcdir):]
+
+        if make_absolute and not page_url.startswith('/'):
+            page_url = '/' + page_url
+        return page_url
+
+
     def filepath(self, url):
         if url not in self.urlcache:
             title, html = self.download(url)
+            # don't like spaces in name
+            title = re.sub('\s+', '_', title)
             filename = title + '.html'
 
             while os.path.exists(os.path.join(self.directory, filename)):
@@ -111,16 +105,18 @@ class WebpageCache(object):
 
     def download(self, url):
         eo, so = sys.stderr, sys.stdout
+        # FIXME actually print out the log somewhere
+        log = io.StringIO()
         try:
             print("[*] Downloading webpage: %s" % url)
-            sys.stderr = io.StringIO()
-            sys.stdout = io.StringIO()
+            sys.stderr = log
+            sys.stdout = log
             html = webpage2html.generate(url, verify=False)
 
-            if html.strip() == '':
-                raise RuntimeError('Could not resolve URL: %s'.format(url))
+            if not html.strip():
+                raise RuntimeError('Could not download URL: %s'.format(url))
 
-            # make a title
+            # extract_title
             soup = BeautifulSoup(html)
             try:
                 title = soup.title.string
@@ -130,17 +126,19 @@ class WebpageCache(object):
             title = re.sub('\S+://+', '', title)
             title = re.sub('www\.', '', title)
             title = re.sub('['+re.escape(string.punctuation)+']+', '-', title)
-            title = re.sub('\s+', '_', title)
             return title, html
         finally:
             sys.stderr = eo
             sys.stdout = so
 
-def process_weblinks(app, doctree, fromdocname):
-    env = app.builder.env
+def visit_websnap_url_node(self, node):
+    pass
 
-    if not hasattr(env, 'websnap_urls'):
-        return
+def depart_websnap_url_node(self, node):
+    pass
+
+def doctree_resolved(app, doctree, fromdocname):
+    env = app.builder.env
 
     if not hasattr(env, 'websnap_page_cache'):
         cache_dir = os.path.join(env.srcdir, env.config.websnap_cache_directory)
@@ -149,81 +147,38 @@ def process_weblinks(app, doctree, fromdocname):
         env.websnap_page_cache = WebpageCache(cache_dir)
 
     cache = env.websnap_page_cache
-    urls = env.websnap_urls
 
-    # for url, urlinfo in env.websnap_urls.items():
-    #    if url in
-    #     print('[*] download url %s' % urlinfo['url'])
+    for node in doctree.traverse(websnap_url_node):
+        url = node['websnap_url']
+        title = node['websnap_title']
 
-    def relpath(url):
-        page_path = cache.filepath(url)
-        assert page_path.startswith(env.srcdir)
-
-        page_url = page_path[len(env.srcdir):]
-
-        if not page_url.startswith('/'):
-            page_url = '/' + page_url
-        return page_url
-
-
-
-    for node in doctree.traverse(websnap_inline_node):
-        content = []
-        w_url = node.rawsource
-        w_name = urls[w_url]['linkname']
-
-        print("*********", w_name)
         pg = nodes.paragraph()
-        
         nref = nodes.reference('', '')
-        nref['refuri'] = relpath(w_url)
 
-        nlinkname = nodes.emphasis(_(w_name), _(w_name))
-        nref.append(nlinkname)
+        # NOTE this cache call is actually where the downloading occurs
+        nref['refuri'] = cache.sourcerel(url, env)
+
+        # In a sense the refernce "surrounds" the url title text
+        nref.append(nodes.emphasis(_(title), _(title)))
 
         pg += nref
 
-        #pg = nodes.raw(
-        #        text='<iframe style="width:100%" src="{}"></iframe>'.format(page_url),
-        #         #text='<p style="width:100%">{}</p>'.format(page_url),
-        #        format='html')
+        node.replace_self(pg)
 
-        content.append(pg)
-
-        node.replace_self(content)
-
-def purge_weblinks(app, env, docname):
-    if not hasattr(env, 'websnap_urls'):
-        return
-
-    urls = env.websnap_urls
-    env.websnap_urls = {k: v for k, v in urls.items()
-                        if v['docname'] != docname}
 
 def setup(app):
-    import os
-    print(os.getcwd())
     # configuration parameters
-    app.add_config_value('websnap_use_cached', True, 'html')
+    app.add_config_value('websnap_skip_download', False, 'html')
     app.add_config_value('websnap_cache_directory', '_static/_websnap/', 'html')
 
     # nodes, and visitors for each markup language
     app.add_node(
-        websnap_inline_node,
-        html=(visit_inline, depart_inline)
+        websnap_url_node,
+        html=(visit_websnap_url_node, depart_websnap_url_node)
     )
 
     # register the directives
-    app.add_directive('websnap-inline', WebsnapInlineDirective)
+    app.add_directive('websnap-url', WebsnapUrlDirective)
+    app.connect('doctree-resolved', doctree_resolved)
 
-    # add event handlers
-    app.connect('doctree-resolved', process_weblinks)
-
-    return {'version': '0.0.1'}
-
-# ControlFlow explanation
-# - User adds directive to document
-# - Directive(*args).run for all directives
-#   - returns list of nodes
-# - Node visitors are called for each output format
-# - Any connected hooks are executed
+    return {'version': __version__}

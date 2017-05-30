@@ -30,6 +30,7 @@ Installation
 ------------
 
 ::
+
    pip install sphinxcontrib-websnap
 
 Then include websnap in your extensions:
@@ -61,6 +62,7 @@ The following are planned features and functionality:
   symbolic name that can be used to refer to it.
 - [B] Add option to current directive to give it a reusable linkname
 - [B] Store more metadata in the .cache file
+
   - downloaded time and date
   - the generated reference to use for the URL
   - the original title from the html

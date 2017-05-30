@@ -4,7 +4,9 @@ from setuptools import setup, find_packages
 
 long_desc = """
 This contrib extension, sphinxcontrib.websnap provides Sphinx
-directives for archiving and linking to website urls.
+directives for scraping, archiving and linking to archived sites.
+
+It's currently in **alpha**.
 
 You can find the documentation from the following URL:
 

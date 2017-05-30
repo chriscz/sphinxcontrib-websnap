@@ -3,19 +3,23 @@ caches them, and allows you to create links to them inside of Sphinx.
 
 Why Websnap
 -----------
-In 2015 I took a course in game programming. For the course we had to keep a 
-text-document journal about all the things we experimented with, as well
-as all of the algorithms we implemented. Shapfter, a programming buddy of 
-mine always wrote documentation for himself while learning a new language or
-language features.
+Journaling and documenting what you learn is good. Here are two
+experiences that cemented that for me
+
+   - In 2015 I took a course in game trees and search programming. 
+     For the course we had to keep a journal about all the things we experimented with, 
+     as well as all of the algorithms we implemented. 
+
+   - Shapfter, a friend of mine always wrote documentation for himself 
+     while learning new programming languages or libraries.
 
 So in early 2017 I started doing the same, and have found that a personal
 wiki / journal has become invaluable for collecting links and documenting
 my own understanding of new software technologies.
 
-I've found that I can get up to speed again on something a learnt months
-ago much faster by consulting my own notes than that of others. Furthermore,
-sometimes you find the exceptionally well-written tutorial you'd like to
+I've found that I can get up to speed faster on something a studied a few months
+earlier by consulting my own notes than by reading the original tutorials. But,
+sometimes you find the one or two exceptional tutorials you'd like to
 keep, and this is were Websnap comes in handy.
 
 Project Status
@@ -24,10 +28,11 @@ Websnap is currently in pre-alpha, which means it's highly experimental and
 has an unstable API. 
 
 I take no liability for messing up your Sphinx documentation, consuming your 
-internet or breaking your computer.
+internet cap or breaking your computer.
 
 Installation
 ------------
+Currently only supports Python 3. Only tested on Python 3.5
 
 ::
 
@@ -52,6 +57,14 @@ Websnap (0.1.0) introduces the directive
    
    .. websnap-url:: <website-url>
                     <url text>                  
+ 
+The website at ``website-url`` will be downloaded as a single page and stored
+under ``_static/_websnap/<name-derived-from-title-or-url>.html``. And at the
+place of the directive will be a link to the local copy, whch you can then open
+by clicking on the link.
+
+Each unique URL will only be downloaded once. To clear the cache, you can remove the
+``_websnap`` directory or edit the ``_websnap/.cache`` (json) file. 
 
 What's planned?
 ---------------

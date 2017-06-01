@@ -21,7 +21,7 @@ requires = [
 
 setup(
     name='sphinxcontrib-websnap',
-    version='0.1.0',
+    version='0.2.0',
     url='http://github.com/chriscz/sphinxcontrib-websnap',
     download_url='http://pypi.python.org/pypi/sphinxcontrib-websnap',
     license='MPL',

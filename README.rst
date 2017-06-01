@@ -51,17 +51,35 @@ Then include websnap in your extensions:
 
 Usage
 -----
-Websnap (0.1.0) introduces the directive
+Websnap (0.2.0) introduces a directive for downloading a webpage:
 
 .. code:: rst
    
-   .. websnap-url:: <website-url>
-                    <url text>                  
+   .. websnap:: <website-url>
+                <reference-name>
  
-The website at ``website-url`` will be downloaded as a single page and stored
-under ``_static/_websnap/<name-derived-from-title-or-url>.html``. And at the
-place of the directive will be a link to the local copy, whch you can then open
-by clicking on the link.
+The webpage at ``website-url`` will be downloaded as a single page and stored
+under ``_static/_websnap/<name-derived-from-title-or-url>.html``. This 
+directive **does not** generate any output. Here's an example:
+
+.. code:: rst
+   
+   .. websnap:: http://www.github.com/chriscz
+                my_github
+ 
+
+Websnap also provides a **role** for referencing downloaded pages. The
+role can itself initiate a download. Here's an example of it's different
+forms:
+
+.. code:: rst
+
+   Welcome to my website, here's an 
+   :websnap:`archived copy of my githubhomepage <my_github>`.
+
+   Here's an archived copy of facebook: :websnap:`http://facebook.com`.
+
+The role use will be replaced by link to the archived copy of the website.
 
 Each unique URL will only be downloaded once. To clear the cache, you can remove the
 ``_websnap`` directory or edit the ``_websnap/.cache`` (json) file. 
@@ -71,6 +89,13 @@ What's planned?
 The following are planned features and functionality:
 
 - [A] Add a lock on the cachefile using https://github.com/WoLpH/portalocker 
+- [B] Consider whether it may be good to store URL and other information
+  as a comment at the top of the downloaded HTML file.
+- [C] Add directive for downloading binary files
+- [C] Add command for updating all outdated cached websites
+
+Completed
+---------
 - [B] Add directive for downloading a URL and assigning it 
   symbolic name that can be used to refer to it.
 - [B] Add option to current directive to give it a reusable linkname
@@ -79,8 +104,3 @@ The following are planned features and functionality:
   - downloaded time and date
   - the generated reference to use for the URL
   - the original title from the html
-
-- [B] Consider whether it may be good to store URL and other information
-  as a comment at the top of the downloaded HTML file.
-- [C] Add directive for downloading binary files
-- [C] Add command for updating all outdated cached websites
